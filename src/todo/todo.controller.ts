@@ -1,41 +1,79 @@
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Put,
+  Delete,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { TodoService } from './todo.service';
-import { Todo } from './todo.model';
+import { Todo } from './entity/todo.entity'; 
+import { CreateTodoDto } from './dto/create-todo.dto';
+import { UpdateTodoDto } from './dto/update-todo.dto';
 
 @Controller('todos')
 export class TodoController {
   constructor(private readonly todoService: TodoService) {}
 
+ 
   @Get()
-  getAllTodos(): Todo[] {
-    return this.todoService.getAllTodos();
+  async getAllTodos(): Promise<Todo[]> {
+    try {
+      return await this.todoService.getAllTodos();
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
+ 
   @Get(':id')
-  getTodoById(@Param('id') id: number): Todo {
-    return this.todoService.getTodoById(Number(id));
+  async getTodoById(@Param('id') id: number): Promise<Todo> {
+    try {
+      return await this.todoService.getTodoById(id);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+    }
   }
 
+ 
   @Post()
-  createTodo(@Body() body: { title: string; description: string }): Todo {
-    return this.todoService.createTodo(body.title, body.description);
+  async createTodo(
+    @Body() createTodoDto: CreateTodoDto,
+  ): Promise<Todo> {
+    try {
+      return await this.todoService.createTodo(createTodoDto.name, createTodoDto.description);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Put(':id')
-  updateTodo(
+  async updateTodo(
     @Param('id') id: number,
-    @Body() body: { title?: string; description?: string; isCompleted?: boolean },
-  ): Todo {
-    return this.todoService.updateTodo(
-      Number(id),
-      body.title,
-      body.description,
-      body.isCompleted,
-    );
+    @Body() updateTodoDto: UpdateTodoDto,
+  ): Promise<Todo> {
+    try {
+      return await this.todoService.updateTodo(
+        id,
+        updateTodoDto.name,
+        updateTodoDto.description,
+        updateTodoDto.status,
+      );
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
+ 
   @Delete(':id')
-deleteTodoById(@Param('id') id: number): { message: string } {
-  return this.todoService.deleteTodoById(Number(id));
-}
+  async deleteTodoById(@Param('id') id: number): Promise<{ message: string }> {
+    try {
+      return await this.todoService.deleteTodoById(id);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+    }
+  }
 }
